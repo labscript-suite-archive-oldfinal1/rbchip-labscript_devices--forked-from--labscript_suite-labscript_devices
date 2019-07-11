@@ -31,6 +31,7 @@ from labscript import (
     AnalogIn,
     bitfield,
     config,
+    compiler,
     LabscriptError,
     set_passed_properties,
 )
@@ -377,6 +378,13 @@ class NI_DAQmx(IntermediateDevice):
                         acq['units'],
                     )
                 )
+        if acquisitions and compiler.wait_table and compiler.wait_monitor is None:
+            msg = """Cannot do analog input on an NI DAQmx device in an experiment that
+                uses waits without a wait monitor. This is because input data cannot be
+                'chunked' into requested segments without knowledge of the durations of
+                the waits. See labscript.WaitMonitor for details."""
+            raise LabscriptError(dedent(msg))
+
         # The 'a256' dtype below limits the string fields to 256
         # characters. Can't imagine this would be an issue, but to not
         # specify the string length (using dtype=str) causes the strings
